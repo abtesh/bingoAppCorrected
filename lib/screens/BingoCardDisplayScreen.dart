@@ -1425,6 +1425,144 @@ class _BingoCardDisplayScreenState extends State<BingoCardDisplayScreen> {
     ]
   };
 
+  void _checkForBingo() {
+    bool hasBingo = false;
+
+    for (var cardKey in widget.cardNumbers) {
+      String cardKeyStr = cardKey.toString(); // Convert to match bingoCards keys
+
+      List<List<int>>? cardData = bingoCards[cardKeyStr]!;
+
+      // Get marked numbers for this card
+      Set<int> markedNumbersForCard = _markedNumbers[cardKeyStr] ?? {};
+
+      if (_isWinningPattern(markedNumbersForCard, cardData)) {
+        hasBingo = true;
+        break;
+      }
+    }
+
+    if (true) {   // make off to check
+      _showBingoDialog();
+    }
+  }
+
+
+  bool _isWinningPattern(Set<int> markedNumbers, List<List<int>> cardData) {
+    // Define winning patterns in terms of row/col indexes
+    print(markedNumbers);
+    print(cardData);
+    List<List<int>> rowPatterns = [];
+    List<List<int>> colPatterns = [[], [], [], [], []];
+    List<int> diagonalPattern1 = [];
+    List<int> diagonalPattern2 = [];
+
+    for (int row = 0; row < 5; row++) {
+      List<int> rowPattern = [];
+      for (int col = 0; col < 5; col++) {
+        int number = cardData[row][col];
+
+        // Skip free space (assumed to be 0)
+        if (number == 0) continue;
+
+        rowPattern.add(number);
+        colPatterns[col].add(number);
+
+        if (row == col) diagonalPattern1.add(number);
+        if (row + col == 4) diagonalPattern2.add(number);
+      }
+      rowPatterns.add(rowPattern);
+    }
+
+    // Check rows, columns, and diagonals
+    List<List<int>> allPatterns = [...rowPatterns, ...colPatterns, diagonalPattern1, diagonalPattern2];
+
+    for (var pattern in allPatterns) {
+      if (pattern.every((num) => markedNumbers.contains(num))) {
+        return true; // Bingo found
+      }
+    }
+
+    return false;
+  }
+
+
+  void _showBingoDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Bingo!'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('You got a Bingo pattern!'),
+              const SizedBox(height: 10),
+              Table(
+                border: TableBorder.all(color: Colors.black),
+                children: [
+                  TableRow(children: [
+                    _bingoCell('B'),
+                    _bingoCell('I'),
+                    _bingoCell('N'),
+                    _bingoCell('G'),
+                    _bingoCell('O'),
+                  ]),
+                  for (var row in _generateBingoPatternTable()) TableRow(children: row),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _bingoCell(String text) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Center(
+        child: Text(text, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+      ),
+    );
+  }
+
+  List<List<Widget>> _generateBingoPatternTable() {
+    return List.generate(5, (rowIndex) {
+      return List.generate(5, (colIndex) {
+        int number = rowIndex * 5 + colIndex + 1; // Example calculation
+        bool isMarked = _markedNumbers.values.any((set) => set.contains(number));
+
+        return Container(
+          margin: const EdgeInsets.all(4),
+          height: 36,
+          width: 36,
+          decoration: BoxDecoration(
+            color: isMarked ? Colors.green : Colors.white,
+            borderRadius: BorderRadius.circular(5),
+            border: Border.all(color: Colors.blueGrey, width: 1),
+          ),
+          child: Center(
+            child: Text(
+              number.toString(),
+              style: TextStyle(
+                fontWeight: isMarked ? FontWeight.bold : FontWeight.normal,
+                color: isMarked ? Colors.white : Colors.black,
+              ),
+            ),
+          ),
+        );
+      });
+    });
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1485,19 +1623,22 @@ class _BingoCardDisplayScreenState extends State<BingoCardDisplayScreen> {
                                   );
 
                                   return GestureDetector(
-                                    onTap: () => setState(() {
-                                      if (number != 0) { // Don't mark free space
-                                        if (isMarked) {
-                                          _markedNumbers.forEach((_, set) {
-                                            set.remove(number);
-                                          });
-                                        } else {
-                                          _markedNumbers.forEach((_, set) {
-                                            set.add(number);
-                                          });
+                                    onTap: () {
+                                      setState(() {
+                                        if (number != 0) { // Don't mark free space
+                                          if (isMarked) {
+                                            _markedNumbers.forEach((_, set) {
+                                              set.remove(number);
+                                            });
+                                          } else {
+                                            _markedNumbers.forEach((_, set) {
+                                              set.add(number);
+                                            });
+                                          }
                                         }
-                                      }
-                                    }),
+                                      });
+                                      _checkForBingo();
+                                    },
                                     child: Container(
                                       margin: const EdgeInsets.all(1.5),
                                       height: 36,
