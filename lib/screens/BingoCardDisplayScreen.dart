@@ -1424,6 +1424,7 @@ class _BingoCardDisplayScreenState extends State<BingoCardDisplayScreen> {
       [15, 26, 35, 60, 71]
     ]
   };
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1436,77 +1437,129 @@ class _BingoCardDisplayScreenState extends State<BingoCardDisplayScreen> {
           ),
         ],
       ),
-      body: ListView.builder(
-        itemCount: widget.cardNumbers.length,
-        itemBuilder: (context, cardIndex) {
-          final cardKey = widget.cardNumbers[cardIndex].toString();
-          final cardData = bingoCards[cardKey]!;
-
-          return Card(
-            margin: const EdgeInsets.all(16),
-            elevation: 5,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
-            ),
+      body: Column(
+        children: [
+          Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  Text(
-                    'Card $cardKey',
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 10),
-                  Table(
-                    border: TableBorder.all(
-                      color: Colors.blueGrey,
-                      borderRadius: BorderRadius.circular(8),
+              padding: const EdgeInsets.all(8.0),
+              child: GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2, // Two columns
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                  childAspectRatio: 0.75,
+                ),
+                itemCount: widget.cardNumbers.length,
+                itemBuilder: (context, cardIndex) {
+                  final cardKey = widget.cardNumbers[cardIndex].toString();
+                  final cardData = bingoCards[cardKey]!;
+
+                  return Card(
+                    elevation: 5,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
                     ),
-                    children: cardData.asMap().entries.map((rowEntry) {
-                      final row = rowEntry.value;
-                      return TableRow(
-                        children: row.asMap().entries.map((cellEntry) {
-                          final number = cellEntry.value;
-                          final isMarked = _markedNumbers[cardIndex]?.contains(number) ?? false;
-                          return GestureDetector(
-                            onTap: () => setState(() {
-                              if (number != 0) { // Don't mark the free space
-                                isMarked
-                                    ? _markedNumbers[cardIndex]?.remove(number)
-                                    : _markedNumbers[cardIndex]?.add(number);
-                              }
-                            }),
-                            child: Container(
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: number == 0
-                                    ? Colors.blue[100]
-                                    : isMarked
-                                    ? Colors.green[200]
-                                    : Colors.white,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  number == 0 ? 'FREE' : number.toString(),
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: isMarked ? FontWeight.bold : FontWeight.normal,
-                                    color: isMarked ? Colors.green[800] : Colors.black,
-                                  ),
-                                ),
-                              ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          Text(
+                            'Card $cardKey',
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
                             ),
-                          );
-                        }).toList(),
-                      );
-                    }).toList(),
-                  ),
-                ],
+                          ),
+                          const SizedBox(height: 10),
+                          Table(
+                            border: TableBorder.all(
+                              color: Colors.transparent,
+                            ),
+                            children: cardData.asMap().entries.map((rowEntry) {
+                              final row = rowEntry.value;
+                              return TableRow(
+                                children: row.asMap().entries.map((cellEntry) {
+                                  final number = cellEntry.value;
+                                  final isMarked = _markedNumbers.values.any(
+                                        (set) => set.contains(number),
+                                  );
+
+                                  return GestureDetector(
+                                    onTap: () => setState(() {
+                                      if (number != 0) { // Don't mark free space
+                                        if (isMarked) {
+                                          _markedNumbers.forEach((_, set) {
+                                            set.remove(number);
+                                          });
+                                        } else {
+                                          _markedNumbers.forEach((_, set) {
+                                            set.add(number);
+                                          });
+                                        }
+                                      }
+                                    }),
+                                    child: Container(
+                                      margin: const EdgeInsets.all(1.5),
+                                      height: 36,
+                                      decoration: BoxDecoration(
+                                        color: number == 0
+                                            ? Colors.blue[100]
+                                            : isMarked
+                                            ? Colors.green[300]
+                                            : Colors.white,
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: Colors.blueGrey,
+                                          width: 1,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(0.2),
+                                            offset: const Offset(2, 2),
+                                            blurRadius: 4,
+                                          ),
+                                        ],
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          number == 0 ? 'FREE' : number.toString(),
+                                          style: TextStyle(
+                                            fontSize: number == 0 ? 12 : 16,
+                                            fontWeight: isMarked
+                                                ? FontWeight.bold
+                                                : FontWeight.normal,
+                                            color: isMarked
+                                                ? Colors.white
+                                                : Colors.black,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
-          );
-        },
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: ElevatedButton(
+              onPressed: () => setState(() => _markedNumbers.clear()),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              child: const Text("Clear"),
+            ),
+          ),
+        ],
       ),
     );
   }

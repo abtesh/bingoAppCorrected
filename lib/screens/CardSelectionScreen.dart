@@ -18,7 +18,7 @@ class _CardSelectionScreenState extends State<CardSelectionScreen> {
       body: GridView.builder(
         padding: EdgeInsets.all(16),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 4, // 4 cards per row
+          crossAxisCount: 10, // 4 cards per row
           childAspectRatio: 1.0,
           mainAxisSpacing: 10,
           crossAxisSpacing: 10,
@@ -45,7 +45,7 @@ class _CardSelectionScreenState extends State<CardSelectionScreen> {
               ),
               child: Center(
                 child: Text(
-                  'Card $cardNumber',
+                  '$cardNumber',
                   style: TextStyle(
                     fontSize: 18,
                     color: isSelected ? Colors.white : Colors.black,
