@@ -3,25 +3,22 @@ import 'package:flutter/material.dart';
 class BingoCardDisplayScreen extends StatefulWidget {
   final List<int> cardNumbers;
 
-  const BingoCardDisplayScreen({Key? key, required this.cardNumbers}) : super(key: key);
+  const BingoCardDisplayScreen({super.key, required this.cardNumbers});
 
   @override
   _BingoCardDisplayScreenState createState() => _BingoCardDisplayScreenState();
 }
 
 class _BingoCardDisplayScreenState extends State<BingoCardDisplayScreen> {
-  // Track marked numbers for each card: {cardIndex: {number: isMarked}}
-  final Map<int, Set<int>> _markedNumbers = {};
+  // Track marked numbers across all cards
+  final Set<int> _markedNumbers = {};
+  bool _showBingoDialog = false;
 
   @override
   void initState() {
     super.initState();
-    // Initialize marked numbers for each card
-    for (int i = 0; i < widget.cardNumbers.length; i++) {
-      _markedNumbers[i] = {};
-    }
+    _showBingoDialog = false;
   }
-
   final Map<String, List<List<int>>> bingoCards = {
     "1": [
       [14, 27, 35, 58, 74],
@@ -1424,29 +1421,109 @@ class _BingoCardDisplayScreenState extends State<BingoCardDisplayScreen> {
       [15, 26, 35, 60, 71]
     ]
   };
-
   void _checkForBingo() {
     bool hasBingo = false;
 
     for (var cardKey in widget.cardNumbers) {
-      String cardKeyStr = cardKey.toString(); // Convert to match bingoCards keys
-
+      String cardKeyStr = cardKey.toString();
       List<List<int>>? cardData = bingoCards[cardKeyStr]!;
 
-      // Get marked numbers for this card
-      Set<int> markedNumbersForCard = _markedNumbers[cardKeyStr] ?? {};
-
-      if (_isWinningPattern(markedNumbersForCard, cardData)) {
+      if (_isWinningPattern(_markedNumbers, cardData)) {
         hasBingo = true;
         break;
       }
     }
 
-    if (true) {   // make off to check
-      _showBingoDialog();
+    if (hasBingo) {
+      _displayBingoWinDialog(); // Changed to use the renamed method
     }
   }
-
+  // void _checkForBingo() {
+  //   bool hasBingo = false;
+  //
+  //   for (var cardKey in widget.cardNumbers) {
+  //     String cardKeyStr = cardKey.toString();
+  //     List<List<int>>? cardData = bingoCards[cardKeyStr]!;
+  //
+  //     if (_isWinningPattern(_markedNumbers, cardData)) {
+  //       hasBingo = true;
+  //       break;
+  //     }
+  //   }
+  //
+  //   if (hasBingo && !_showBingoDialog) {
+  //     setState(() {
+  //       _showBingoDialog = true;
+  //     });
+  //     _showBingoDialog;
+  //   }
+  // }
+  void _displayBingoWinDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Bingo!'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('You got a Bingo pattern!'),
+              const SizedBox(height: 10),
+              Table(
+                border: TableBorder.all(color: Colors.black),
+                children: [
+                  TableRow(children: [
+                    _bingoCell('B'),
+                    _bingoCell('I'),
+                    _bingoCell('N'),
+                    _bingoCell('G'),
+                    _bingoCell('O'),
+                  ]),
+                  for (var row in _generateBingoPatternTable()) TableRow(children: row),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  // void _showBingoDialog() {
+  //   showDialog(
+  //     context: context,
+  //     barrierDismissible: false,
+  //     builder: (BuildContext context) {
+  //       return AlertDialog(
+  //         title: const Text('Bingo!', style: TextStyle(fontWeight: FontWeight.bold)),
+  //         content: Column(
+  //           mainAxisSize: MainAxisSize.min,
+  //           children: [
+  //             const Text('Congratulations! You have a winning pattern!'),
+  //             const SizedBox(height: 20),
+  //             Image.asset('assets/bingo_confetti.png', height: 100), // Add your own asset
+  //           ],
+  //         ),
+  //         actions: [
+  //           TextButton(
+  //             onPressed: () {
+  //               setState(() {
+  //                 _showBingoDialog = false;
+  //               });
+  //               Navigator.of(context).pop();
+  //             },
+  //             child: const Text('Continue Playing'),
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
 
   bool _isWinningPattern(Set<int> markedNumbers, List<List<int>> cardData) {
     // Define winning patterns in terms of row/col indexes
@@ -1487,42 +1564,6 @@ class _BingoCardDisplayScreenState extends State<BingoCardDisplayScreen> {
   }
 
 
-  void _showBingoDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Bingo!'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('You got a Bingo pattern!'),
-              const SizedBox(height: 10),
-              Table(
-                border: TableBorder.all(color: Colors.black),
-                children: [
-                  TableRow(children: [
-                    _bingoCell('B'),
-                    _bingoCell('I'),
-                    _bingoCell('N'),
-                    _bingoCell('G'),
-                    _bingoCell('O'),
-                  ]),
-                  for (var row in _generateBingoPatternTable()) TableRow(children: row),
-                ],
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
-  }
 
   Widget _bingoCell(String text) {
     return Padding(
@@ -1533,11 +1574,12 @@ class _BingoCardDisplayScreenState extends State<BingoCardDisplayScreen> {
     );
   }
 
+// Fix the _generateBingoPatternTable method:
   List<List<Widget>> _generateBingoPatternTable() {
     return List.generate(5, (rowIndex) {
       return List.generate(5, (colIndex) {
-        int number = rowIndex * 5 + colIndex + 1; // Example calculation
-        bool isMarked = _markedNumbers.values.any((set) => set.contains(number));
+        int number = rowIndex * 5 + colIndex + 1;
+        bool isMarked = _markedNumbers.contains(number); // Directly check the Set
 
         return Container(
           margin: const EdgeInsets.all(4),
@@ -1575,133 +1617,191 @@ class _BingoCardDisplayScreenState extends State<BingoCardDisplayScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2, // Two columns
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                  childAspectRatio: 0.75,
-                ),
-                itemCount: widget.cardNumbers.length,
-                itemBuilder: (context, cardIndex) {
-                  final cardKey = widget.cardNumbers[cardIndex].toString();
-                  final cardData = bingoCards[cardKey]!;
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.lightBlue[50]!, Colors.lightBlue[100]!],
+          ),
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    childAspectRatio: 0.75,
+                  ),
+                  itemCount: widget.cardNumbers.length,
+                  itemBuilder: (context, cardIndex) {
+                    final cardKey = widget.cardNumbers[cardIndex].toString();
+                    final cardData = bingoCards[cardKey]!;
 
-                  return Card(
-                    elevation: 5,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        children: [
-                          Text(
-                            'Card $cardKey',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
+                    return Card(
+                      elevation: 5,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            Text(
+                              'Card $cardKey',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue[800],
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 10),
-                          Table(
-                            border: TableBorder.all(
-                              color: Colors.transparent,
-                            ),
-                            children: cardData.asMap().entries.map((rowEntry) {
-                              final row = rowEntry.value;
-                              return TableRow(
-                                children: row.asMap().entries.map((cellEntry) {
-                                  final number = cellEntry.value;
-                                  final isMarked = _markedNumbers.values.any(
-                                        (set) => set.contains(number),
-                                  );
-
-                                  return GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        if (number != 0) { // Don't mark free space
-                                          if (isMarked) {
-                                            _markedNumbers.forEach((_, set) {
-                                              set.remove(number);
-                                            });
-                                          } else {
-                                            _markedNumbers.forEach((_, set) {
-                                              set.add(number);
-                                            });
-                                          }
-                                        }
-                                      });
-                                      _checkForBingo();
-                                    },
-                                    child: Container(
-                                      margin: const EdgeInsets.all(1.5),
-                                      height: 36,
-                                      decoration: BoxDecoration(
-                                        color: number == 0
-                                            ? Colors.blue[100]
-                                            : isMarked
-                                            ? Colors.green[300]
-                                            : Colors.white,
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(
-                                          color: Colors.blueGrey,
-                                          width: 1,
-                                        ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withOpacity(0.2),
-                                            offset: const Offset(2, 2),
-                                            blurRadius: 4,
-                                          ),
-                                        ],
-                                      ),
+                            const SizedBox(height: 10),
+                            // BINGO Header Row
+                            Table(
+                              children: [
+                                TableRow(
+                                  children: ['B', 'I', 'N', 'G', 'O'].map((letter) {
+                                    return Container(
+                                      margin: const EdgeInsets.only(bottom: 4),
                                       child: Center(
                                         child: Text(
-                                          number == 0 ? 'FREE' : number.toString(),
+                                          letter,
                                           style: TextStyle(
-                                            fontSize: number == 0 ? 12 : 16,
-                                            fontWeight: isMarked
-                                                ? FontWeight.bold
-                                                : FontWeight.normal,
-                                            color: isMarked
-                                                ? Colors.white
-                                                : Colors.black,
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.blue[800],
                                           ),
                                         ),
                                       ),
-                                    ),
+                                    );
+                                  }).toList(),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            // Card Numbers
+                            Expanded(
+                              child: Table(
+                                border: TableBorder.all(
+                                  color: Colors.transparent,
+                                ),
+                                children: cardData.asMap().entries.map((rowEntry) {
+                                  final row = rowEntry.value;
+                                  return TableRow(
+                                    children: row.asMap().entries.map((cellEntry) {
+                                      final number = cellEntry.value;
+                                      final isMarked = _markedNumbers.contains(number);
+
+                                      return GestureDetector(
+                                        onTap: () {
+                                          setState(() {
+                                            if (number != 0) { // Don't mark free space
+                                              if (isMarked) {
+                                                _markedNumbers.remove(number);
+                                              } else {
+                                                _markedNumbers.add(number);
+                                              }
+                                            }
+                                          });
+                                          _checkForBingo();
+                                        },
+                                        child: Container(
+                                          margin: const EdgeInsets.all(1.5),
+                                          decoration: BoxDecoration(
+                                            color: number == 0
+                                                ? Colors.blue[100]
+                                                : isMarked
+                                                ? Colors.green[300]
+                                                : Colors.white,
+                                            borderRadius: BorderRadius.circular(8),
+                                            border: Border.all(
+                                              color: Colors.blueGrey,
+                                              width: 1,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withOpacity(0.1),
+                                                offset: const Offset(1, 1),
+                                                blurRadius: 2,
+                                              ),
+                                            ],
+                                          ),
+                                          child: Stack(
+                                            alignment: Alignment.center,
+                                            children: [
+                                              Center(
+                                                child: Text(
+                                                  number == 0 ? 'FREE' : number.toString(),
+                                                  style: TextStyle(
+                                                    fontSize: number == 0 ? 12 : 16,
+                                                    fontWeight: isMarked
+                                                        ? FontWeight.bold
+                                                        : FontWeight.normal,
+                                                    color: isMarked
+                                                        ? Colors.white
+                                                        : Colors.black,
+                                                  ),
+                                                ),
+                                              ),
+                                              if (isMarked && number != 0)
+                                                Container(
+                                                  decoration: BoxDecoration(
+                                                    shape: BoxShape.circle,
+                                                    color: Colors.green.withOpacity(0.5),
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
                                   );
                                 }).toList(),
-                              );
-                            }).toList(),
-                          ),
-                        ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => setState(() => _markedNumbers.clear()),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.lightBlue[400],
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  );
-                },
+                  ),
+                  child: const Text(
+                    "Clear All Marks",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            child: ElevatedButton(
-              onPressed: () => setState(() => _markedNumbers.clear()),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
-                textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              child: const Text("Clear"),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
+}
+
+extension on Set<int> {
+  get values => null;
 }
