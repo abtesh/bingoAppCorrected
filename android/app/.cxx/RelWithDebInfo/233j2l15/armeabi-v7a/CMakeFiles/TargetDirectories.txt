@@ -1,0 +1,2 @@
+C:/Users/hp/Downloads/FlutterBingoAppFinal-main/android/app/.cxx/RelWithDebInfo/233j2l15/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/Users/hp/Downloads/FlutterBingoAppFinal-main/android/app/.cxx/RelWithDebInfo/233j2l15/armeabi-v7a/CMakeFiles/rebuild_cache.dir

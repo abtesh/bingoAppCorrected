@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:new_bingo_app/screens/CardSelectionScreen.dart';
-import 'package:new_bingo_app/screens/HomeScreen.dart';
 
 void main() {
   runApp(BingoApp());

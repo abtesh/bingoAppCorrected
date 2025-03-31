@@ -13,6 +13,9 @@ class _BingoCardDisplayScreenState extends State<BingoCardDisplayScreen> {
   // Track marked numbers across all cards
   final Set<int> _markedNumbers = {};
   bool _showBingoDialog = false;
+  List<List<int>>? _winningCard;
+  List<int> _winningPattern = [];
+  String _winningCardNumber = '';
 
   @override
   void initState() {
@@ -1421,187 +1424,134 @@ class _BingoCardDisplayScreenState extends State<BingoCardDisplayScreen> {
       [15, 26, 35, 60, 71]
     ]
   };
+// Replace the existing _checkForBingo method
   void _checkForBingo() {
-    bool hasBingo = false;
-
     for (var cardKey in widget.cardNumbers) {
       String cardKeyStr = cardKey.toString();
       List<List<int>>? cardData = bingoCards[cardKeyStr]!;
 
-      if (_isWinningPattern(_markedNumbers, cardData)) {
-        hasBingo = true;
-        break;
+      List<List<int>> allPatterns = _getAllPatterns(cardData);
+
+      for (var pattern in allPatterns) {
+        if (pattern.every((num) => _markedNumbers.contains(num))) {
+          setState(() {
+            _winningCard = cardData;
+            _winningPattern = pattern;
+            _winningCardNumber = cardKeyStr;
+          });
+          _displayBingoWinDialog();
+          return; // Stop checking after first win
+        }
       }
     }
-
-    if (hasBingo) {
-      _displayBingoWinDialog(); // Changed to use the renamed method
-    }
   }
-  // void _checkForBingo() {
-  //   bool hasBingo = false;
-  //
-  //   for (var cardKey in widget.cardNumbers) {
-  //     String cardKeyStr = cardKey.toString();
-  //     List<List<int>>? cardData = bingoCards[cardKeyStr]!;
-  //
-  //     if (_isWinningPattern(_markedNumbers, cardData)) {
-  //       hasBingo = true;
-  //       break;
-  //     }
-  //   }
-  //
-  //   if (hasBingo && !_showBingoDialog) {
-  //     setState(() {
-  //       _showBingoDialog = true;
-  //     });
-  //     _showBingoDialog;
-  //   }
-  // }
+  // Add this new helper method
+  List<List<int>> _getAllPatterns(List<List<int>> cardData) {
+    List<List<int>> patterns = [];
+
+    // Check rows
+    for (var row in cardData) {
+      patterns.add(row.where((num) => num != 0).toList());
+    }
+
+    // Check columns
+    for (int col = 0; col < 5; col++) {
+      List<int> column = [];
+      for (int row = 0; row < 5; row++) {
+        if (cardData[row][col] != 0) column.add(cardData[row][col]);
+      }
+      patterns.add(column);
+    }
+
+    // Check diagonals
+    List<int> diag1 = [];
+    List<int> diag2 = [];
+    for (int i = 0; i < 5; i++) {
+      if (cardData[i][i] != 0) diag1.add(cardData[i][i]);
+      if (cardData[i][4-i] != 0) diag2.add(cardData[i][4-i]);
+    }
+    patterns.add(diag1);
+    patterns.add(diag2);
+
+    return patterns;
+  }
+
+// Replace the existing _displayBingoWinDialog method
   void _displayBingoWinDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Bingo!'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('You got a Bingo pattern!'),
-              const SizedBox(height: 10),
-              Table(
-                border: TableBorder.all(color: Colors.black),
-                children: [
-                  TableRow(children: [
-                    _bingoCell('B'),
-                    _bingoCell('I'),
-                    _bingoCell('N'),
-                    _bingoCell('G'),
-                    _bingoCell('O'),
-                  ]),
-                  for (var row in _generateBingoPatternTable()) TableRow(children: row),
-                ],
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'),
+          title: const Text('BINGO!', style: TextStyle(fontSize: 24, color: Colors.green)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Winning Card: $_winningCardNumber',
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 20),
+                if (_winningCard != null) _buildWinningCardPreview(),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                  ),
+                  child: const Text('Continue Playing',
+                      style: TextStyle(color: Colors.white)),
+                ),
+              ],
             ),
-          ],
+          ),
         );
       },
     );
   }
-  // void _showBingoDialog() {
-  //   showDialog(
-  //     context: context,
-  //     barrierDismissible: false,
-  //     builder: (BuildContext context) {
-  //       return AlertDialog(
-  //         title: const Text('Bingo!', style: TextStyle(fontWeight: FontWeight.bold)),
-  //         content: Column(
-  //           mainAxisSize: MainAxisSize.min,
-  //           children: [
-  //             const Text('Congratulations! You have a winning pattern!'),
-  //             const SizedBox(height: 20),
-  //             Image.asset('assets/bingo_confetti.png', height: 100), // Add your own asset
-  //           ],
-  //         ),
-  //         actions: [
-  //           TextButton(
-  //             onPressed: () {
-  //               setState(() {
-  //                 _showBingoDialog = false;
-  //               });
-  //               Navigator.of(context).pop();
-  //             },
-  //             child: const Text('Continue Playing'),
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
+  Widget _buildWinningCardPreview() {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.blue, width: 2),
+      ),
+      padding: const EdgeInsets.all(8),
+      child: Table(
+        border: TableBorder.all(color: Colors.grey[300]!),
+        children: [
+          TableRow(
+            decoration: BoxDecoration(color: Colors.blue[50]),
+            children: const [
+              _BingoHeaderCell('B'),
+              _BingoHeaderCell('I'),
+              _BingoHeaderCell('N'),
+              _BingoHeaderCell('G'),
+              _BingoHeaderCell('O'),
+            ],
+          ),
+          ..._winningCard!.map((row) => TableRow(
+            children: row.map((number) {
+              final isWinningNumber = _winningPattern.contains(number);
+              final isFreeSpace = number == 0;
 
-  bool _isWinningPattern(Set<int> markedNumbers, List<List<int>> cardData) {
-    // Define winning patterns in terms of row/col indexes
-    print(markedNumbers);
-    print(cardData);
-    List<List<int>> rowPatterns = [];
-    List<List<int>> colPatterns = [[], [], [], [], []];
-    List<int> diagonalPattern1 = [];
-    List<int> diagonalPattern2 = [];
-
-    for (int row = 0; row < 5; row++) {
-      List<int> rowPattern = [];
-      for (int col = 0; col < 5; col++) {
-        int number = cardData[row][col];
-
-        // Skip free space (assumed to be 0)
-        if (number == 0) continue;
-
-        rowPattern.add(number);
-        colPatterns[col].add(number);
-
-        if (row == col) diagonalPattern1.add(number);
-        if (row + col == 4) diagonalPattern2.add(number);
-      }
-      rowPatterns.add(rowPattern);
-    }
-
-    // Check rows, columns, and diagonals
-    List<List<int>> allPatterns = [...rowPatterns, ...colPatterns, diagonalPattern1, diagonalPattern2];
-
-    for (var pattern in allPatterns) {
-      if (pattern.every((num) => markedNumbers.contains(num))) {
-        return true; // Bingo found
-      }
-    }
-
-    return false;
-  }
-
-
-
-  Widget _bingoCell(String text) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Center(
-        child: Text(text, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              return Container(
+                height: 40,
+                color: isWinningNumber ? Colors.green[100] : Colors.transparent,
+                child: Center(
+                  child: isFreeSpace
+                      ? const Icon(Icons.star, color: Colors.amber, size: 24)
+                      : Text(
+                    number.toString(),
+                    style: TextStyle(
+                      fontWeight: isWinningNumber ? FontWeight.bold : FontWeight.normal,
+                      color: isWinningNumber ? Colors.green[900] : Colors.black,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          )).toList(),
+        ],
       ),
     );
-  }
-
-// Fix the _generateBingoPatternTable method:
-  List<List<Widget>> _generateBingoPatternTable() {
-    return List.generate(5, (rowIndex) {
-      return List.generate(5, (colIndex) {
-        int number = rowIndex * 5 + colIndex + 1;
-        bool isMarked = _markedNumbers.contains(number); // Directly check the Set
-
-        return Container(
-          margin: const EdgeInsets.all(4),
-          height: 36,
-          width: 36,
-          decoration: BoxDecoration(
-            color: isMarked ? Colors.green : Colors.white,
-            borderRadius: BorderRadius.circular(5),
-            border: Border.all(color: Colors.blueGrey, width: 1),
-          ),
-          child: Center(
-            child: Text(
-              number.toString(),
-              style: TextStyle(
-                fontWeight: isMarked ? FontWeight.bold : FontWeight.normal,
-                color: isMarked ? Colors.white : Colors.black,
-              ),
-            ),
-          ),
-        );
-      });
-    });
   }
 
 
@@ -1730,14 +1680,20 @@ class _BingoCardDisplayScreenState extends State<BingoCardDisplayScreen> {
                                               ),
                                             ],
                                           ),
-                                          child: Stack(
+                                          child: number == 0
+                                              ? Icon(
+                                            Icons.star,
+                                            color: Colors.blueAccent,
+                                            size: 22,
+                                          )
+                                              : Stack(
                                             alignment: Alignment.center,
                                             children: [
                                               Center(
                                                 child: Text(
-                                                  number == 0 ? 'FREE' : number.toString(),
+                                                  number.toString(),
                                                   style: TextStyle(
-                                                    fontSize: number == 0 ? 12 : 16,
+                                                    fontSize: 16,
                                                     fontWeight: isMarked
                                                         ? FontWeight.bold
                                                         : FontWeight.normal,
@@ -1747,7 +1703,7 @@ class _BingoCardDisplayScreenState extends State<BingoCardDisplayScreen> {
                                                   ),
                                                 ),
                                               ),
-                                              if (isMarked && number != 0)
+                                              if (isMarked)
                                                 Container(
                                                   decoration: BoxDecoration(
                                                     shape: BoxShape.circle,
@@ -1801,7 +1757,26 @@ class _BingoCardDisplayScreenState extends State<BingoCardDisplayScreen> {
     );
   }
 }
+// Add this helper widget class at the bottom of your file
+class _BingoHeaderCell extends StatelessWidget {
+  final String letter;
 
-extension on Set<int> {
-  get values => null;
+  const _BingoHeaderCell(this.letter);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Center(
+        child: Text(
+          letter,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.blue[900],
+          ),
+        ),
+      ),
+    );
+  }
 }
