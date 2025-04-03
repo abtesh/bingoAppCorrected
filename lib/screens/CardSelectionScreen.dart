@@ -16,7 +16,7 @@ class _CardSelectionScreenState extends State<CardSelectionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Wana Bingo'),
+        title: Text('Dallol Bingo'),
         centerTitle: true,
       ),
       body: Container(

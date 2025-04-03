@@ -5,7 +5,7 @@ class BingoCardDisplayScreen extends StatefulWidget {
   final List<int> cardNumbers;
   final int patternsToWin;
 
-  const BingoCardDisplayScreen({super.key, required this.cardNumbers,     this.patternsToWin = 1, // Default to 1 pattern
+  const BingoCardDisplayScreen({super.key, required this.cardNumbers,     this.patternsToWin = 0, // Default to 1 pattern
   });
 
   @override
@@ -30,6 +30,9 @@ class _BingoCardDisplayScreenState extends State<BingoCardDisplayScreen> {
 
       if (winningPatterns.isNotEmpty) {
         newWinningPatterns[cardKeyStr] = winningPatterns;
+        if (winningPatterns.length >= widget.patternsToWin && widget.patternsToWin != 0){
+          _showBingoDialog(cardKeyStr);
+        }
       }
     }
 
@@ -52,6 +55,9 @@ class _BingoCardDisplayScreenState extends State<BingoCardDisplayScreen> {
     // Diagonals
     patterns.add([for (int i = 0; i < 5; i++) cardData[i][i]]);
     patterns.add([for (int i = 0; i < 5; i++) cardData[i][4 - i]]);
+
+    //corners
+    patterns.add([cardData[0][0],cardData[0][4],cardData[4][0],cardData[4][4]]);
 
     return patterns;
   }
@@ -117,6 +123,53 @@ class _BingoCardDisplayScreenState extends State<BingoCardDisplayScreen> {
       ),
     );
   }
+
+  void _showBingoDialog(String cardKeyStr) {
+    final cardData = bingoCards[cardKeyStr]!;
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Bingo!'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('You got a Bingo pattern!'),
+              const SizedBox(height: 10),
+              Table(
+                border: TableBorder.all(color: Colors.black),
+                children: [
+                  TableRow(children: [
+                    _BingoHeaderCell('B'),
+                    _BingoHeaderCell('I'),
+                    _BingoHeaderCell('N'),
+                    _BingoHeaderCell('G'),
+                    _BingoHeaderCell('O'),
+                  ])
+                ],
+              ),
+              const SizedBox(height: 4),
+              Expanded(
+                child: Table(
+                  border: TableBorder.all(color: Colors.transparent),
+                  children: cardData.map((row) => TableRow(
+                    children: row.map((number) => _buildCardCell(cardKeyStr, number)).toList(),
+                  )).toList(),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {

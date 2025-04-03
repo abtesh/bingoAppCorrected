@@ -91,11 +91,11 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                             color: Colors.blue[800],
                             fontWeight: FontWeight.w500,
                           ),
-                          items: [1, 2, 3, 4].map((int value) {
+                          items: [0, 1, 2, 3].map((int value) {
                             return DropdownMenuItem<int>(
                               value: value,
                               child: Text(
-                                '$value Pattern${value > 1 ? 's' : ''} to Win',
+                                value == 0 ? 'Don\'t Notify': '$value Pattern${value > 1 ? 's' : ''} to Win',
                                 style: const TextStyle(fontSize: 16),
                               ),
                             );

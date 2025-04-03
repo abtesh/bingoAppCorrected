@@ -11,7 +11,7 @@ class BingoApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Bingo App',
+      title: 'Dallol Bingo App',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         colorScheme: ColorScheme.light(
