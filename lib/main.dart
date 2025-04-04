@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:new_bingo_app/screens/CardSelectionScreen.dart';
+import 'screens/SplashScreen.dart';
 
 void main() {
-  runApp(BingoApp());
+  runApp(const BingoApp());
 }
 
 class BingoApp extends StatelessWidget {
@@ -12,6 +12,7 @@ class BingoApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Dallol Bingo App',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
         colorScheme: ColorScheme.light(
@@ -21,7 +22,7 @@ class BingoApp extends StatelessWidget {
         appBarTheme: AppBarTheme(
           backgroundColor: Colors.lightBlue[300],
           elevation: 5,
-          titleTextStyle: TextStyle(
+          titleTextStyle: const TextStyle(
             color: Colors.white,
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -31,7 +32,7 @@ class BingoApp extends StatelessWidget {
           backgroundColor: Colors.lightBlue[400],
         ),
       ),
-      home: CardSelectionScreen(),
+      home: const SplashScreen(),
     );
   }
 }

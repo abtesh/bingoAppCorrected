@@ -34,84 +34,108 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Card(
-                elevation: 5,
+                elevation: 6,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 color: Colors.white,
+                shadowColor: Colors.lightBlue[100],
                 child: Padding(
-                  padding: const EdgeInsets.all(20.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24.0,
+                    vertical: 30.0,
+                  ),
                   child: Column(
                     children: [
                       Icon(Icons.assignment_turned_in,
-                          color: Colors.lightBlue[400], size: 50),
-                      const SizedBox(height: 16),
+                          color: Colors.lightBlue[400], size: 54),
+                      const SizedBox(height: 20),
                       Text(
                         'You\'ve selected ${widget.selectedCards.length} Bingo card${widget.selectedCards.length > 1 ? 's' : ''}',
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: 22,
                           fontWeight: FontWeight.bold,
                           color: Colors.blue[800],
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 18),
                       Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
+                        spacing: 10,
+                        runSpacing: 10,
                         alignment: WrapAlignment.center,
                         children: widget.selectedCards.map((card) {
                           return Chip(
                             label: Text('Card $card'),
                             backgroundColor: Colors.lightBlue[100],
-                            labelStyle: TextStyle(color: Colors.blue[800]),
+                            labelStyle: TextStyle(
+                              color: Colors.blue[800],
+                              fontWeight: FontWeight.w600,
+                            ),
+                            elevation: 2,
                           );
                         }).toList(),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 30),
                       // Pattern Selection Dropdown
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        decoration: BoxDecoration(
-                          color: Colors.lightBlue[50],
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.lightBlue[300]!,
-                            width: 1.5,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "How many patterns to win?",
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.blue[800],
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        ),
-                        child: DropdownButton<int>(
-                          value: _selectedPatternCount,
-                          isExpanded: true,
-                          underline: Container(), // Remove default underline
-                          icon: Icon(Icons.arrow_drop_down,
-                              color: Colors.blue[800]),
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.blue[800],
-                            fontWeight: FontWeight.w500,
-                          ),
-                          items: [0, 1, 2, 3].map((int value) {
-                            return DropdownMenuItem<int>(
-                              value: value,
-                              child: Text(
-                                value == 0 ? 'Don\'t Notify': '$value Pattern${value > 1 ? 's' : ''} to Win',
-                                style: const TextStyle(fontSize: 16),
+                          const SizedBox(height: 10),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: Colors.lightBlue[50],
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.lightBlue[300]!,
+                                width: 1.5,
                               ),
-                            );
-                          }).toList(),
-                          onChanged: (int? newValue) {
-                            setState(() {
-                              _selectedPatternCount = newValue!;
-                            });
-                          },
-                        ),
+                            ),
+                            child: DropdownButton<int>(
+                              value: _selectedPatternCount,
+                              isExpanded: true,
+                              underline: Container(),
+                              icon: Icon(Icons.arrow_drop_down,
+                                  color: Colors.blue[800]),
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.blue[800],
+                                fontWeight: FontWeight.w500,
+                              ),
+                              items: [0, 1, 2, 3].map((int value) {
+                                return DropdownMenuItem<int>(
+                                  value: value,
+                                  child: Text(
+                                    value == 0
+                                        ? 'Don\'t Notify'
+                                        : '$value Pattern${value > 1 ? 's' : ''} to Win',
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (int? newValue) {
+                                setState(() {
+                                  _selectedPatternCount = newValue!;
+                                });
+                              },
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 40),
               ElevatedButton(
                 onPressed: () {
                   Navigator.push(
@@ -130,7 +154,7 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  elevation: 3,
+                  elevation: 4,
                 ),
                 child: const Text(
                   'START PLAYING',
@@ -141,7 +165,7 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: Text(
@@ -149,6 +173,7 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                   style: TextStyle(
                     color: Colors.blue[800],
                     fontSize: 16,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
