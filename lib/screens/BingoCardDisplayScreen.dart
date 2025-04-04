@@ -45,6 +45,7 @@ class _BingoCardDisplayScreenState extends State<BingoCardDisplayScreen> {
     final patterns = <List<int>>[];
 
     // Rows
+    // Rows
     patterns.addAll(cardData);
 
     // Columns
@@ -129,42 +130,120 @@ class _BingoCardDisplayScreenState extends State<BingoCardDisplayScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Bingo!'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          elevation: 5,
+          backgroundColor: Colors.transparent,
+          child: Stack(
+            clipBehavior: Clip.none,
             children: [
-              const Text('You got a Bingo pattern!'),
-              const SizedBox(height: 10),
-              Table(
-                border: TableBorder.all(color: Colors.black),
-                children: [
-                  TableRow(children: [
-                    _BingoHeaderCell('B'),
-                    _BingoHeaderCell('I'),
-                    _BingoHeaderCell('N'),
-                    _BingoHeaderCell('G'),
-                    _BingoHeaderCell('O'),
-                  ])
-                ],
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF2196F3), Color(0xFF1976D2)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 8,
+                      offset: const Offset(2, 2),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.celebration, color: Colors.amber, size: 50),
+                    const SizedBox(height: 10),
+                    const Text(
+                      "🎉 BINGO! 🎉",
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      "You got a Bingo pattern!",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white70,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        children: [
+                          // Bingo Table Header
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: ["B", "I", "N", "G", "O"]
+                                .map((letter) => _BingoHeaderCell(letter))
+                                .toList(),
+                          ),
+                          const SizedBox(height: 4),
+                          // Bingo Card Table
+                          Column(
+                            children: cardData
+                                .map((row) => Row(
+                              mainAxisAlignment:
+                              MainAxisAlignment.spaceAround,
+                              children: row
+                                  .map((number) =>
+                                  _buildCardCell(cardKeyStr, number))
+                                  .toList(),
+                            ))
+                                .toList(),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.amber,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 30, vertical: 12),
+                      ),
+                      child: const Text(
+                        "Keep Playing!",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 4),
-              Expanded(
-                child: Table(
-                  border: TableBorder.all(color: Colors.transparent),
-                  children: cardData.map((row) => TableRow(
-                    children: row.map((number) => _buildCardCell(cardKeyStr, number)).toList(),
-                  )).toList(),
+              // Confetti Effect
+              Positioned(
+                top: -20,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Icon(Icons.emoji_events,
+                      color: Colors.amber.shade700, size: 40),
                 ),
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'),
-            ),
-          ],
         );
       },
     );

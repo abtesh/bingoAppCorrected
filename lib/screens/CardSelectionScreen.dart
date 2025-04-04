@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'ConfirmationScreen.dart';
+
 class CardSelectionScreen extends StatefulWidget {
   const CardSelectionScreen({super.key});
 
@@ -44,8 +45,8 @@ class _CardSelectionScreenState extends State<CardSelectionScreen> {
               child: GridView.builder(
                 padding: EdgeInsets.all(16),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 8, // Reduced from 10 to make cells wider
-                  childAspectRatio: 0.8, // Wider cells (0.8 width/height ratio)
+                  crossAxisCount: MediaQuery.of(context).size.width > 400 ? 8 : 6, // Adjust columns based on screen width
+                  childAspectRatio: 0.8,
                   mainAxisSpacing: 8,
                   crossAxisSpacing: 8,
                 ),
@@ -84,7 +85,7 @@ class _CardSelectionScreenState extends State<CardSelectionScreen> {
                         child: Text(
                           '$cardNumber',
                           style: TextStyle(
-                            fontSize: cardNumber > 99 ? 14 : 16, // Smaller font for 3-digit numbers
+                            fontSize: _getFontSize(context, cardNumber), // Dynamic font size
                             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                             color: isSelected ? Colors.white : Colors.blue[800],
                           ),
@@ -134,5 +135,18 @@ class _CardSelectionScreenState extends State<CardSelectionScreen> {
         ),
       ),
     );
+  }
+
+  // Helper function to determine font size based on screen size and number length
+  double _getFontSize(BuildContext context, int cardNumber) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    if (screenWidth < 350) { // Very small devices
+      return cardNumber > 99 ? 16 : 18;
+    } else if (screenWidth < 400) { // Small devices
+      return cardNumber > 99 ? 18 : 20;
+    } else { // Normal devices
+      return cardNumber > 99 ? 20 : 22;
+    }
   }
 }
